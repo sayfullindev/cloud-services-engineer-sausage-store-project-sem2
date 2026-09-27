@@ -24,7 +24,7 @@
     <name>sausage-store</name>
     <description>Backend for sausage-store</description>
     <properties>
-        <java.version>16</java.version>
+        <java.version>17</java.version>
         <sonar.projectKey>test_manual</sonar.projectKey>
         <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
