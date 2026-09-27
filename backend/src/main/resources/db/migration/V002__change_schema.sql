@@ -1,0 +1,9 @@
+ALTER TABLE orders
+ADD COLUMN date_created DATE DEFAULT CURRENT_DATE;
+
+ALTER TABLE product
+ADD COLUMN price DOUBLE PRECISION;
+
+DROP TABLE product_info;
+
+DROP TABLE orders_date;
