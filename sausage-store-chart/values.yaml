@@ -95,6 +95,17 @@ infra:
     env:
       user: root
       password: rootpassword
+    report:
+      database: sausage-store
+      user: reports
+      password: reportspassword
+    initResources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits:
+        memory: "128Mi"
+        cpu: "200m"
     storage:
       mountPath: /data/db
       size: 1Gi

@@ -1,0 +1,66 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.mongodb.name }}-init-script
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.mongodb.name }}-init
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/managed-by: "{{ .Release.Service }}"
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: sausage-store
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation
+data:
+  mongo-init.sh: |
+{{ .Files.Get "scripts/mongo-init.sh" | indent 4 }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.mongodb.name }}-init
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.mongodb.name }}-init
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/managed-by: "{{ .Release.Service }}"
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: sausage-store
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 5
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mongodb.name }}-init
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: {{ .Values.mongodb.name }}-init
+          image: {{ .Values.mongodb.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.mongodb.name }}-secret
+          env:
+            - name: MONGO_HOST
+              value: "{{ .Values.mongodb.name }}:{{ .Values.mongodb.containerPort }}"
+          command: ["/bin/sh", "/scripts/mongo-init.sh"]
+          volumeMounts:
+            - name: init-script
+              mountPath: /scripts
+              readOnly: true
+          resources:
+{{ toYaml .Values.mongodb.initResources | indent 12 }}
+      volumes:
+        - name: init-script
+          configMap:
+            name: {{ .Values.mongodb.name }}-init-script

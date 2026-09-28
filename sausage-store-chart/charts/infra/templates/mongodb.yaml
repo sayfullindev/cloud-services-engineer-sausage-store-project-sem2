@@ -15,6 +15,9 @@ type: Opaque
 stringData:
   MONGO_INITDB_ROOT_USERNAME: {{ .Values.mongodb.env.user | quote }}
   MONGO_INITDB_ROOT_PASSWORD: {{ .Values.mongodb.env.password | quote }}
+  MONGO_REPORT_DATABASE: {{ .Values.mongodb.report.database | quote }}
+  MONGO_REPORT_USERNAME: {{ .Values.mongodb.report.user | quote }}
+  MONGO_REPORT_PASSWORD: {{ .Values.mongodb.report.password | quote }}
 ---
 apiVersion: v1
 kind: Service
