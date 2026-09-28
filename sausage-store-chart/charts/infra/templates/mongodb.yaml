@@ -1,64 +1,97 @@
-apiVersion: apps/v1
-kind: StatefulSet
+---
+apiVersion: v1
+kind: Secret
 metadata:
-  name: mongodb
-  annotations:
-    helm.sh/hook-weight: "-5"
-spec:
-  serviceName: mongodb
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mongodb
-  template:
-    metadata:
-      labels:
-        app: mongodb
-    spec:
-      containers:
-      - name: mongodb
-        image: mongo:7.0
-        envFrom:
-          - configMapRef:
-              name: mongodb-conf
-        ports:
-        - containerPort: {{ .Values.mongodb.containerPort }}
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "50m"
-          limits:
-            memory: "256Mi"
-        volumeMounts:
-        - name: mongodb-data
-          mountPath: /data/db
-  volumeClaimTemplates:
-  - metadata:
-      name: mongodb-data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 1Gi
+  name: {{ .Values.mongodb.name }}-secret
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.mongodb.name }}
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/managed-by: "{{ .Release.Service }}"
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: sausage-store
+type: Opaque
+stringData:
+  MONGO_INITDB_ROOT_USERNAME: {{ .Values.mongodb.env.user | quote }}
+  MONGO_INITDB_ROOT_PASSWORD: {{ .Values.mongodb.env.password | quote }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongodb
+  name: {{ .Values.mongodb.name }}
+  namespace: {{ .Release.Namespace }}
   labels:
-    app: mongodb
+    app.kubernetes.io/name: {{ .Values.mongodb.name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: sausage-store
 spec:
+  clusterIP: None
   ports:
   - port: {{ .Values.mongodb.containerPort }}
     targetPort: {{ .Values.mongodb.containerPort }}
+    protocol: TCP
   selector:
-    app: mongodb
-  clusterIP: None
+    app: {{ .Values.mongodb.name }}
 ---
-apiVersion: v1
-kind: ConfigMap
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
-  name: mongodb-conf
-data:
-  MONGO_INITDB_ROOT_USERNAME: {{ .Values.mongodb.env.MONGO_INITDB_ROOT_USERNAME }}
-  MONGO_INITDB_ROOT_PASSWORD: {{ .Values.mongodb.env.MONGO_INITDB_ROOT_PASSWORD }}
+  name: {{ .Values.mongodb.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.mongodb.name}}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: sausage-store
+
+spec:
+  serviceName: {{ .Values.mongodb.name}}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.mongodb.name}}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mongodb.name}}
+    spec:
+      containers:
+      - name: {{ .Values.mongodb.name}}
+        image: {{ .Values.mongodb.image }}
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        envFrom:
+          - secretRef:
+              name: {{ .Values.mongodb.name }}-secret
+        ports:
+        - name: mongodb
+          containerPort: {{ .Values.mongodb.containerPort }}
+        resources:        
+{{ toYaml .Values.mongodb.resources | indent 10 }}
+        readinessProbe:
+          exec:
+            command:
+              - mongosh
+              - --eval
+              - "db.adminCommand('ping')"
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+        volumeMounts:
+        - name: {{ .Values.mongodb.name }}-data
+          mountPath: {{ .Values.mongodb.storage.mountPath }}
+  volumeClaimTemplates:
+  - metadata:
+      name: {{ .Values.mongodb.name }}-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.mongodb.storage.size }}

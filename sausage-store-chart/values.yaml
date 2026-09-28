@@ -70,9 +70,38 @@ backend-report:
 
 infra:
   postgresql:
-  ### Опишите необходимые переменные для развертывания PostgresQL в кластере Kubernetes
-  mongodb:
+    name: postgresql
+    image: postgres:16-alpine
+    containerPort: 5432
     env:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+      database: sausage-store
+      user: store
+      password: storepassword
+      pgData: /var/lib/postgresql/data/pgdata
+    storage:
+      mountPath: /var/lib/postgresql/data
+      size: 1Gi
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "384Mi"
+        cpu: "300m"
+  mongodb:
+    name: mongodb
+    image: mongo:7.0
     containerPort: 27017
+    env:
+      user: root
+      password: rootpassword
+    storage:
+      mountPath: /data/db
+      size: 1Gi
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "300m"
