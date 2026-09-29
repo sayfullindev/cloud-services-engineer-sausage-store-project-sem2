@@ -71,15 +71,26 @@ jobs:
               gabella187/sausage-backend-report:latest
               gabella187/sausage-backend-report:${{ github.sha }}
 
-  # # Упаковываем helm-чарт и пушим его в Nexus
-  # add_helm_chart_to_nexus:
-  #     name: Add Helm Chart To Nexus
-  #     runs-on: ubuntu-latest
-  #     needs: build_and_push_to_docker_hub
+  # Упаковываем helm-чарт и пушим его в Nexus
+  add_helm_chart_to_nexus:
+      name: Add Helm Chart To Nexus
+      runs-on: ubuntu-latest
+      needs: build_and_push_to_docker_hub
 
-  #     steps:
-  #     #### Опишите необходимые шаги
+      steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+      
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
 
+      - name: Package chart
+        run: helm package sausage-store-chart --version 0.1.${{ github.run_number }} 
+
+      - name: Upload chart to Nexus
+        run: |
+            curl -f -u "$NEXUS_HELM_REPO_USER:$NEXUS_HELM_REPO_PASSWORD" --upload-file sausage-store-0.1.${{ github.run_number }}.tgz "$NEXUS_HELM_REPO/"
+  
   # # Деплоим приложения в кластер Kubernetes с помощью helm-чарт
   # deploy_helm_chart_to_kubernetes:
   #     name: Deploy Helm Chart To Kubernetes
