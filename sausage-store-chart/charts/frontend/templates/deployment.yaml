@@ -5,23 +5,25 @@ metadata:
   name: {{ .Release.Name }}-{{ .Chart.Name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/name: sausage-{{ .Chart.Name }}
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     app.kubernetes.io/version: "{{ .Chart.AppVersion }}"
     app.kubernetes.io/managed-by: "{{ .Release.Service }}"
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/component: {{ .Chart.Name }}
-    app.kubernetes.io/part-of: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Chart.Name }}"
+    app.kubernetes.io/part-of: sausage-store
 spec:
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   replicas: {{ .Values.replicas }}
   strategy:
-    type: {{ .Values.strategy.type }}
+{{ toYaml .Values.strategy | indent 4 }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-{{ .Chart.Name }}
+      app: "{{ .Release.Name }}-{{ .Chart.Name }}"
   template:
     metadata:
+      annotations:
+        checksum/config: "{{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}"
       labels:
         app: {{ .Release.Name }}-{{ .Chart.Name }}
     spec:
@@ -31,14 +33,16 @@ spec:
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           resources:
 {{ toYaml .Values.resources | indent 12 }} 
+          livenessProbe:
+{{ toYaml .Values.livenessProbe | indent 12 }}
           ports:
             - name: {{ .Chart.Name }}
               containerPort: {{ .Values.containerPort }}
           volumeMounts:
-          - name: {{ .Release.Name }}-{{ .Chart.Name }}-conf
-            mountPath: /etc/nginx/{{ .Values.nginxConf }}
-            subPath: {{ .Values.nginxConf }}
-            readOnly: true
+            - name: {{ .Release.Name }}-{{ .Chart.Name }}-conf
+              mountPath: /etc/nginx/{{ .Values.nginxConf }}
+              subPath: {{ .Values.nginxConf }}
+              readOnly: true
       volumes:
         - name: {{ .Release.Name }}-{{ .Chart.Name }}-conf
           configMap:

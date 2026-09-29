@@ -7,7 +7,6 @@ global:
 
 
 frontend:
-### В чарте frontend отсутствуют некоторые важные файлы. Поймите какие и опишите их.
   replicas: 1
   revisionHistoryLimit: 15
   strategy:
@@ -15,18 +14,27 @@ frontend:
   service:
     port: 80
   ingress:
-    host: YOUR_STUDENT_HOSTNAME.students-projects.ru # Корректный домен будет указан в задании
+    host: front-gabella.2sem.students-projects.ru
     path: /
     pathType: Prefix
+    tlsSecretName: 2sem-students-projects-wildcard-secret
   containerPort: 80
-  image: YOUR_DOCKERHUB/sausage-frontend:latest
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  image: gabella187/sausage-frontend:latest
   resources:
     requests:
-      memory: "128Mi"
-      cpu: "100m"
+      memory: "64Mi"
+      cpu: "50m"
     limits:
       memory: "128Mi"
-      cpu: "1"
+      cpu: "100m"
   nginxConf: nginx.conf
 
 backend:
