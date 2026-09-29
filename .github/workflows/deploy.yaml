@@ -51,25 +51,26 @@ jobs:
             # на сервере и в docker-compose.yml не указывать версию образа:
             tags: | 
               gabella187/sausage-backend:latest
-              ${{ github.sha }}
+              gabella187/sausage-backend:${{ github.sha }}
             build-args: |
               VERSION=${{ github.sha }}
         - name: Push Frontend to DockerHub
-          uses: docker/build-push-action@v4
+          uses: docker/build-push-action@v6
           with:
             context: ./frontend/
             push: true
             tags: |
               gabella187/sausage-frontend:latest
-              ${{ github.sha }}
+              gabella187/sausage-frontend:${{ github.sha }}
         - name: Push Backend-report to DockerHub
-          uses: docker/build-push-action@v4
+          uses: docker/build-push-action@v6
           with:
             context: ./backend-report/
             push: true
             tags: |
               gabella187/sausage-backend-report:latest
-              ${{ github.sha }}
+              gabella187/sausage-backend-report:${{ github.sha }}
+
   # # Упаковываем helm-чарт и пушим его в Nexus
   # add_helm_chart_to_nexus:
   #     name: Add Helm Chart To Nexus
