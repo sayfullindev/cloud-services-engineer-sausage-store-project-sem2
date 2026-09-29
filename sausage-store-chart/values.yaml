@@ -151,7 +151,7 @@ infra:
         memory: "64Mi"
         cpu: "50m"
       limits:
-        memory: "128Mi"
+        memory: "256Mi"
         cpu: "200m"
     wiredTigerCacheSizeGB: 0.25
     storage:
