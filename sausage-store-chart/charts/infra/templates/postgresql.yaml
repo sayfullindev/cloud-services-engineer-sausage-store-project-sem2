@@ -5,7 +5,7 @@ metadata:
   name: {{ .Values.postgresql.name }}-secret
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ .Values.postgresql.name }}
+    app.kubernetes.io/name: "{{ .Values.postgresql.name }}"
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     app.kubernetes.io/managed-by: "{{ .Release.Service }}"
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
@@ -22,7 +22,7 @@ metadata:
   name: {{ .Values.postgresql.name }}-conf
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ .Values.postgresql.name }}
+    app.kubernetes.io/name: "{{ .Values.postgresql.name }}"
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     app.kubernetes.io/managed-by: "{{ .Release.Service }}"
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
@@ -38,7 +38,7 @@ metadata:
   name: {{ .Values.postgresql.name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ .Values.postgresql.name }}
+    app.kubernetes.io/name: "{{ .Values.postgresql.name }}"
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     app.kubernetes.io/managed-by: "{{ .Release.Service }}"
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
@@ -51,7 +51,7 @@ spec:
       targetPort: {{ .Values.postgresql.containerPort }}
       protocol: TCP
   selector:
-    app: {{ .Values.postgresql.name }}
+    app: "{{ .Values.postgresql.name }}"
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -59,7 +59,7 @@ metadata:
   name: {{ .Values.postgresql.name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ .Values.postgresql.name }}
+    app.kubernetes.io/name: "{{ .Values.postgresql.name }}"
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     app.kubernetes.io/version: "{{ .Chart.AppVersion }}"
     app.kubernetes.io/managed-by: "{{ .Release.Service }}"
@@ -71,11 +71,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Values.postgresql.name }}
+      app: "{{ .Values.postgresql.name }}"
   template:
     metadata:
       labels:
-        app: {{ .Values.postgresql.name }}
+        app: "{{ .Values.postgresql.name }}"
     spec:
       containers:
         - name: {{ .Values.postgresql.name }}

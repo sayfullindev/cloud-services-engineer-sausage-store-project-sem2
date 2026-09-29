@@ -5,7 +5,7 @@ metadata:
   name: {{ .Values.mongodb.name }}-secret
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ .Values.mongodb.name }}
+    app.kubernetes.io/name: "{{ .Values.mongodb.name }}"
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     app.kubernetes.io/managed-by: "{{ .Release.Service }}"
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
@@ -25,21 +25,21 @@ metadata:
   name: {{ .Values.mongodb.name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ .Values.mongodb.name }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: "{{ .Values.mongodb.name }}"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/version: "{{ .Chart.AppVersion }}"
+    app.kubernetes.io/managed-by: "{{ .Release.Service }}"
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     app.kubernetes.io/component: database
     app.kubernetes.io/part-of: sausage-store
 spec:
   clusterIP: None
   ports:
-  - port: {{ .Values.mongodb.containerPort }}
-    targetPort: {{ .Values.mongodb.containerPort }}
-    protocol: TCP
+    - port: {{ .Values.mongodb.containerPort }}
+      targetPort: {{ .Values.mongodb.containerPort }}
+      protocol: TCP
   selector:
-    app: {{ .Values.mongodb.name }}
+    app: "{{ .Values.mongodb.name }}"
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -47,54 +47,53 @@ metadata:
   name: {{ .Values.mongodb.name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ .Values.mongodb.name}}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: "{{ .Values.mongodb.name }}"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/version: "{{ .Chart.AppVersion }}"
+    app.kubernetes.io/managed-by: "{{ .Release.Service }}"
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     app.kubernetes.io/component: database
     app.kubernetes.io/part-of: sausage-store
-
 spec:
-  serviceName: {{ .Values.mongodb.name}}
+  serviceName: {{ .Values.mongodb.name }}
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Values.mongodb.name}}
+      app: "{{ .Values.mongodb.name }}"
   template:
     metadata:
       labels:
-        app: {{ .Values.mongodb.name}}
+        app: "{{ .Values.mongodb.name }}"
     spec:
       containers:
-      - name: {{ .Values.mongodb.name}}
-        image: {{ .Values.mongodb.image }}
-        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-        envFrom:
-          - secretRef:
-              name: {{ .Values.mongodb.name }}-secret
-        ports:
-        - name: mongodb
-          containerPort: {{ .Values.mongodb.containerPort }}
-        resources:        
-{{ toYaml .Values.mongodb.resources | indent 10 }}
-        readinessProbe:
-          exec:
-            command:
-              - mongosh
-              - --eval
-              - "db.adminCommand('ping')"
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          timeoutSeconds: 3
-        volumeMounts:
-        - name: {{ .Values.mongodb.name }}-data
-          mountPath: {{ .Values.mongodb.storage.mountPath }}
+        - name: {{ .Values.mongodb.name }}
+          image: {{ .Values.mongodb.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          args:
+            - --wiredTigerCacheSizeGB
+            - {{ .Values.mongodb.wiredTigerCacheSizeGB | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.mongodb.name }}-secret
+          ports:
+            - name: mongodb
+              containerPort: {{ .Values.mongodb.containerPort }}
+          resources:
+{{ toYaml .Values.mongodb.resources | indent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.mongodb.containerPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: {{ .Values.mongodb.name }}-data
+              mountPath: {{ .Values.mongodb.storage.mountPath }}
   volumeClaimTemplates:
-  - metadata:
-      name: {{ .Values.mongodb.name }}-data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: {{ .Values.mongodb.storage.size }}
+    - metadata:
+        name: {{ .Values.mongodb.name }}-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.mongodb.storage.size }}

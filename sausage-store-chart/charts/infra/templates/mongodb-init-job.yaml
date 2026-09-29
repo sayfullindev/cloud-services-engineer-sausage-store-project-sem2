@@ -5,7 +5,7 @@ metadata:
   name: {{ .Values.mongodb.name }}-init-script
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ .Values.mongodb.name }}-init
+    app.kubernetes.io/name: "{{ .Values.mongodb.name }}-init"
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     app.kubernetes.io/managed-by: "{{ .Release.Service }}"
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
@@ -25,7 +25,7 @@ metadata:
   name: {{ .Values.mongodb.name }}-init
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ .Values.mongodb.name }}-init
+    app.kubernetes.io/name: "{{ .Values.mongodb.name }}-init"
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     app.kubernetes.io/managed-by: "{{ .Release.Service }}"
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
@@ -40,7 +40,7 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ .Values.mongodb.name }}-init
+        app: "{{ .Values.mongodb.name }}-init"
     spec:
       restartPolicy: OnFailure
       containers:

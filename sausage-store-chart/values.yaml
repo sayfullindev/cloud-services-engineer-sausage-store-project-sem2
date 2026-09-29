@@ -36,18 +36,22 @@ backend:
     scrape: "true"
   env:
     postgresUri: jdbc:postgresql://postgresql:5432/sausage-store
-    postgresUser: store
-    postgresPassword: storepassword
     reportPath: /logs/reports
     logPath: /logs
+  secrets:
+    postgresUser: store
+    postgresPassword: storepassword
+    mongoUri: mongodb://reports:reportspassword@mongodb:27017/sausage-store
   service:
     port: 8080
   revisionHistoryLimit: 15
   replicas: 1
   strategy:
-  ### Опишите стратегию RollingUpdate для бэкенда
-  image: YOUR_DOCKERHUB/sausage-backend:latest
-  imagePullPolicy: Always
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  image: gabella187/sausage-backend:latest
   resources:
     requests:
       memory: "256Mi"
@@ -57,9 +61,20 @@ backend:
       cpu: "1"
   containerPort: 8080
   livenessProbe:
-  ### Опишите LivenessProbe для бэкенда
+    httpGet:
+      path: /actuator/health
+      port: 8080
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
   vpa:
-  ### Опишите VPA для бэкенда
+    updatePolicy:
+      updateMode: "Off"
+    resourcePolicy:
+      containerPolicies:
+        - containerName: backend
+          controlledResources: ["cpu", "memory"]
 
 backend-report:
 ### Опишите значения для backend-report
@@ -106,6 +121,8 @@ infra:
       limits:
         memory: "128Mi"
         cpu: "200m"
+    # минимально допустимое значение; кэш + накладные расходы ~400Mi
+    wiredTigerCacheSizeGB: 0.25
     storage:
       mountPath: /data/db
       size: 1Gi
@@ -114,5 +131,5 @@ infra:
         memory: "128Mi"
         cpu: "100m"
       limits:
-        memory: "256Mi"
+        memory: "512Mi"
         cpu: "300m"
