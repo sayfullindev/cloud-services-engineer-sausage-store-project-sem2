@@ -77,11 +77,35 @@ backend:
           controlledResources: ["cpu", "memory"]
 
 backend-report:
-### Опишите значения для backend-report
-### Приложение должно использовать стратегию Recreate
-### Приложение использует переменную PORT - порт, на котором оно запустится и DB - Uri-подключение к mongodb. 
-### DB положите в Secret, PORT в ConfigMap
-### Опишите HPA для backend-report
+  env:
+    appPort: 8080
+  secrets:
+    mongoUri: mongodb://reports:reportspassword@mongodb:27017/sausage-store
+  revisionHistoryLimit: 15
+  replicas: 1
+  strategy:
+    type: Recreate
+  image: gabella187/sausage-backend-report:latest
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+  containerPort: 8080
+  livenessProbe:
+    httpGet:
+      path: /api/v1/health
+      port: 8080
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  hpa:
+    minReplicas: 1
+    maxReplicas: 5
+    averageUtilization: 75
 
 infra:
   postgresql:
@@ -121,7 +145,6 @@ infra:
       limits:
         memory: "128Mi"
         cpu: "200m"
-    # минимально допустимое значение; кэш + накладные расходы ~400Mi
     wiredTigerCacheSizeGB: 0.25
     storage:
       mountPath: /data/db
