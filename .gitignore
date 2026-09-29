@@ -2,4 +2,5 @@
 todo.md
 check-list.md
 .vscode
-scripts
+/scripts
+*.tgz
